@@ -1,3 +1,4 @@
+import { exec } from "child_process";
 import { Library } from "../services/library";
 
 describe("Library Management System", () => {
@@ -50,6 +51,69 @@ describe("Library Management System", () => {
     expect(() => {
       library.returnBook(book.isbn);
     }).toThrow("Book was not borrowed.");
+  });
+
+  test("should return a borrowed book", () => {
+    const books = [
+      {
+        isbn: "111-222-333",
+        title: "War and Peace",
+        author: "Leo Tolstoy",
+        publicationYear: 1869,
+      },
+      {
+        isbn: "444-555-666",
+        title: "The Catcher in the Rye",
+        author: "J.D. Salinger",
+        publicationYear: 1951,
+      },
+    ];
+
+    books.forEach((book) => library.addBook(book));
+    library.borrowBook(books[0].isbn);
+    library.returnBook(books[0].isbn);
+
+    const availableBooks = library.viewAvailableBooks();
+    expect(availableBooks).toEqual(
+      expect.arrayContaining([
+        { ...books[0], isAvailable: true },
+        { ...books[1], isAvailable: true },
+      ])
+    );
+  });
+
+  test("should show all the available books", () => {
+    const books = [
+      {
+        isbn: "111-222-333",
+        title: "War and Peace",
+        author: "Leo Tolstoy",
+        publicationYear: 1869,
+      },
+      {
+        isbn: "444-555-666",
+        title: "The Catcher in the Rye",
+        author: "J.D. Salinger",
+        publicationYear: 1951,
+      },
+    ];
+
+    books.forEach((book) => library.addBook(book));
+
+    const availableBooks = library.viewAvailableBooks();
+    expect(availableBooks).toEqual(
+      expect.arrayContaining([
+        { ...books[0], isAvailable: true },
+        { ...books[1], isAvailable: true },
+      ])
+    );
+    library.borrowBook(books[0].isbn);
+
+    const updatedAvailableBooks = library.viewAvailableBooks();
+    expect(updatedAvailableBooks.length).toBe(1);
+    expect(updatedAvailableBooks).toEqual(
+      expect.arrayContaining([{ ...books[1], isAvailable: true }])
+    );
   });
 
   // More test to add
