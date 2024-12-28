@@ -4,7 +4,7 @@ export interface Book {
   author: string;
   publicationYear: number;
   isAvailable: boolean;
-  borrowedBy: string;
+  borrowedBy?: string;
 }
 
 export interface User {

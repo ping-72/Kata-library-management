@@ -13,6 +13,28 @@ export class Library {
     this.books.push({ ...book, isAvailable: true, borrowedBy: "" });
   }
 
+  updateBook(
+    isbn: string,
+    updates: Partial<Omit<Book, "isbn" | "borrowedBy">>
+  ): void {
+    const book = this.books.find((b) => b.isbn === isbn);
+    if (!book) {
+      throw new Error("Book not found.");
+    }
+    if (updates.title !== undefined) book.title = updates.title;
+    if (updates.author !== undefined) book.author = updates.author;
+    if (updates.publicationYear !== undefined)
+      book.publicationYear = updates.publicationYear;
+  }
+
+  deleteBook(isbn: string): void {
+    const initialLength = this.books.length;
+    this.books = this.books.filter((b) => b.isbn !== isbn);
+    if (this.books.length === initialLength) {
+      throw new Error("Book not found.");
+    }
+  }
+
   registerUser(user: Omit<User, "id">): User {
     const existingUser = this.users.find((u) => u.email === user.email);
     if (existingUser) {
