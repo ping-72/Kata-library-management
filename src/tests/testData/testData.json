@@ -1,0 +1,32 @@
+{
+  "users": [
+    {
+      "name": "Alice Johnson",
+      "email": "alice.johnson@example.com"
+    },
+    {
+      "name": "Bob Smith",
+      "email": "bob.smith@example.com"
+    }
+  ],
+  "books": [
+    {
+      "isbn": "111-222-333",
+      "title": "War and Peace",
+      "author": "Leo Tolstoy",
+      "publicationYear": 1869
+    },
+    {
+      "isbn": "444-555-666",
+      "title": "The Catcher in the Rye",
+      "author": "J.D. Salinger",
+      "publicationYear": 1951
+    },
+    {
+      "isbn": "777-888-999",
+      "title": "The Lord of the Rings",
+      "author": "J.R.R. Tolkien",
+      "publicationYear": 1954
+    }
+  ]
+}

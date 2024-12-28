@@ -1,120 +1,133 @@
 import { exec } from "child_process";
 import { Library } from "../services/library";
+import testData from "./testData/testData.json";
+import { User, Book } from "../models/schemas";
 
 describe("Library Management System", () => {
   let library: Library;
+  let users: User[];
+
+  beforeAll(() => {
+    library = new Library();
+
+    users = testData.users.map((userData) => library.registerUser(userData));
+  });
 
   beforeEach(() => {
     library = new Library();
+    users = testData.users.map((userData) => library.registerUser(userData));
+
+    testData.books.forEach((bookData) => library.addBook(bookData));
   });
 
   test("should add a new book to the library", () => {
-    const book = {
+    const newBook: Omit<Book, "isAvailable" | "borrowedBy"> = {
       isbn: "123-456-789",
       title: "The Great Gatsby",
       author: "F. Scott Fitzgerald",
       publicationYear: 1925,
     };
 
-    library.addBook(book);
+    library.addBook(newBook);
 
     const availableBooks = library.viewAvailableBooks();
-    expect(availableBooks).toContainEqual({ ...book, isAvailable: true });
+    const bookFound = availableBooks.filter(
+      (book) => book.isbn === newBook.isbn
+    );
+    expect(bookFound.length).toBe(1);
   });
 
-  test("should borrow an available book", () => {
-    const book = {
-      isbn: "987-654-321",
-      title: "1984",
-      author: "George Orwell",
-      publicationYear: 1949,
+  test("should register a new user", () => {
+    const newUser: Omit<User, "id"> = {
+      name: "Prince Kumar",
+      email: "xyz123@example.com",
     };
 
-    library.addBook(book);
-    library.borrowBook(book.isbn);
+    const registeredUser = library.registerUser(newUser);
+    expect(registeredUser).toHaveProperty("id");
+    expect(registeredUser.name).toBe(newUser.name);
+    expect(registeredUser.email).toBe(newUser.email);
+  });
+
+  test("should not register an existing user", () => {
+    const existingUser: Omit<User, "id"> = {
+      name: "Alice Johnson",
+      email: "alice.johnson@example.com",
+    };
 
     expect(() => {
-      library.borrowBook(book.isbn);
-    }).toThrow("Book is not available for borrowing");
+      library.registerUser(existingUser);
+    }).toThrow("User with this email already exist in the library.");
+  });
+
+  test("should borrow an available book by registered user", () => {
+    const user = users[0];
+    const book_isbn = "111-222-333";
+
+    library.borrowBook(book_isbn, user.id);
+
+    const availableBooks = library.viewAvailableBooks();
+
+    expect(
+      availableBooks.find((book) => book.isbn === book_isbn)
+    ).toBeUndefined();
   });
 
   test("should not return a book that is not borrowed", () => {
-    const book = {
-      isbn: "999-888-777",
-      title: "Moby Dick",
-      author: "Herman Melville",
-      publicationYear: 1851,
-    };
+    const user1 = users[0];
+    const user2 = users[1];
+    const book_isbn = "111-222-333";
 
-    library.addBook(book);
+    library.borrowBook(book_isbn, user1.id);
+    expect(() => {
+      library.borrowBook(book_isbn, user2.id);
+    }).toThrow("Book is not available for borrowing.");
+  });
+
+  test("should not return a book that is not borrowed", () => {
+    const user = users[0];
+    const book_isbn = "111-222-333";
 
     expect(() => {
-      library.returnBook(book.isbn);
+      library.returnBook(book_isbn, user.id);
     }).toThrow("Book was not borrowed.");
   });
 
-  test("should return a borrowed book", () => {
-    const books = [
-      {
-        isbn: "111-222-333",
-        title: "War and Peace",
-        author: "Leo Tolstoy",
-        publicationYear: 1869,
-      },
-      {
-        isbn: "444-555-666",
-        title: "The Catcher in the Rye",
-        author: "J.D. Salinger",
-        publicationYear: 1951,
-      },
-    ];
+  test("should not return a book that is not borrowed by the user", () => {
+    const user1 = users[0];
+    const user2 = users[1];
+    const book_isbn = "111-222-333";
 
-    books.forEach((book) => library.addBook(book));
-    library.borrowBook(books[0].isbn);
-    library.returnBook(books[0].isbn);
-
-    const availableBooks = library.viewAvailableBooks();
-    expect(availableBooks).toEqual(
-      expect.arrayContaining([
-        { ...books[0], isAvailable: true },
-        { ...books[1], isAvailable: true },
-      ])
-    );
+    library.borrowBook(book_isbn, user1.id);
+    expect(() => {
+      library.returnBook(book_isbn, user2.id);
+    }).toThrow("Book was not borrowed by this user.");
   });
 
   test("should show all the available books", () => {
-    const books = [
-      {
-        isbn: "111-222-333",
-        title: "War and Peace",
-        author: "Leo Tolstoy",
-        publicationYear: 1869,
-      },
-      {
-        isbn: "444-555-666",
-        title: "The Catcher in the Rye",
-        author: "J.D. Salinger",
-        publicationYear: 1951,
-      },
-    ];
-
-    books.forEach((book) => library.addBook(book));
-
     const availableBooks = library.viewAvailableBooks();
-    expect(availableBooks).toEqual(
-      expect.arrayContaining([
-        { ...books[0], isAvailable: true },
-        { ...books[1], isAvailable: true },
-      ])
-    );
-    library.borrowBook(books[0].isbn);
-
-    const updatedAvailableBooks = library.viewAvailableBooks();
-    expect(updatedAvailableBooks.length).toBe(1);
-    expect(updatedAvailableBooks).toEqual(
-      expect.arrayContaining([{ ...books[1], isAvailable: true }])
-    );
+    expect(availableBooks.length).toBe(testData.books.length);
   });
 
+  test("should view borrowed books by a specific user", () => {
+    const user = users[0];
+    const book_isbn1 = "111-222-333";
+    const book_isbn2 = "444-555-666";
+
+    library.borrowBook(book_isbn1, user.id);
+    const borrowedBooks = library.viewBorrowedBooks(user.id);
+    expect(borrowedBooks.length).toBe(1);
+    expect(borrowedBooks[0].isbn).toBe(book_isbn1);
+
+    library.borrowBook(book_isbn2, user.id);
+    const updatedBorrowedBooks = library.viewBorrowedBooks(user.id);
+    expect(updatedBorrowedBooks.length).toBe(2);
+    expect(updatedBorrowedBooks).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ isbn: book_isbn1 }),
+        expect.objectContaining({ isbn: book_isbn2 }),
+      ])
+    );
+  });
   // More test to add
 });
