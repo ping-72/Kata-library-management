@@ -1,3 +1,5 @@
+import { error } from "console";
+
 interface Book {
   isbn: string; // unique id for the book
   title: string;
@@ -15,6 +17,17 @@ export class Library {
       throw new Error("Book with this ISBN already exist in the library.");
     }
     this.books.push({ ...book, isAvailable: true });
+  }
+
+  borrowBook(isbn: string): void {
+    const book = this.books.find((b) => b.isbn === isbn);
+    if (!book) {
+      throw new Error("Book not found.");
+    }
+    if (!book.isAvailable) {
+      throw new Error("Book is not available for borrowing.");
+    }
+    book.isAvailable = false;
   }
 
   viewAvailableBooks(): Book[] {
