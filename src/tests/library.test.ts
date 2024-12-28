@@ -37,5 +37,20 @@ describe("Library Management System", () => {
     }).toThrow("Book is not available for borrowing");
   });
 
+  test("should not return a book that is not borrowed", () => {
+    const book = {
+      isbn: "999-888-777",
+      title: "Moby Dick",
+      author: "Herman Melville",
+      publicationYear: 1851,
+    };
+
+    library.addBook(book);
+
+    expect(() => {
+      library.returnBook(book.isbn);
+    }).toThrow("Book was not borrowed.");
+  });
+
   // More test to add
 });

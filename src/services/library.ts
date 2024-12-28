@@ -30,6 +30,17 @@ export class Library {
     book.isAvailable = false;
   }
 
+  returnBook(isbn: string): void {
+    const book = this.books.find((b) => b.isbn === isbn);
+    if (!book) {
+      throw new Error("Book not found.");
+    }
+    if (book.isAvailable) {
+      throw new Error("Book was not borrowed.");
+    }
+    book.isAvailable = true;
+  }
+
   viewAvailableBooks(): Book[] {
     return this.books.filter((book) => book.isAvailable);
   }
