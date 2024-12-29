@@ -1,0 +1,50 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [21.7.1]
+
+    steps:
+      - name: Clone Repository
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: "npm"
+
+      - name: Install Dependencies
+        run: npm i
+
+      - name: Build Project
+        run: npx tsc
+
+      - name: Run Tests with Coverage
+        run: npm test -- --coverage
+
+      - name: Upload Coverage Report
+        if: success() || failure()
+        uses: actions/upload-artifact@v3
+        with:
+          name: coverage-report-${{ matrix.node-version }}
+          path: coverage/
+
+      - name: Upload Jest HTML Report
+        if: success() || failure()
+        uses: actions/upload-artifact@v3
+        with:
+          name: jest-report-${{ matrix.node-version }}
+          path: test-report.html

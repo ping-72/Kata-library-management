@@ -1,8 +1,29 @@
-/** @type {import('ts-jest').JestConfigWithTsJest} **/
+/** @type {import('ts-jest').JestConfigWithTsJest} */
 module.exports = {
-  testEnvironment: "node",
   preset: "ts-jest",
+  testEnvironment: "node",
+  moduleFileExtensions: ["ts", "js", "json"],
   transform: {
-    "^.+.tsx?$": ["ts-jest", {}],
+    "^.+\\.ts$": "ts-jest",
   },
+  globals: {
+    "ts-jest": {
+      tsconfig: "tsconfig.json",
+    },
+  },
+  reporters: [
+    "default",
+    [
+      "jest-html-reporter",
+      {
+        pageTitle: "Library Management System Test Report",
+        outputPath: "./test-report.html",
+        includeFailureMsg: true,
+        includeConsoleLog: true,
+      },
+    ],
+  ],
+  collectCoverage: true,
+  coverageDirectory: "coverage",
+  coverageReporters: ["text", "lcov", "html"],
 };
